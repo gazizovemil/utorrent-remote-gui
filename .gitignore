@@ -1,0 +1,21 @@
+# Ignored build artifacts
+lib/
+backup/
+*.exe
+*.o
+*.ppu
+*.a
+*.or
+*.res
+*.compiled
+*.dbg
+*.lps
+utorrentgui.ini
+utorrent-gui.ini
+*.log
+apitest.exe
+release/
+*.zip
+*.7z
+*-setup.exe
+utorrentgui.exe

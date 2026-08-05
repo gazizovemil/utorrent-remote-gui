@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <PathDelim Value="\"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="True"/>
+        <MainUnitHasTitleStatement Value="True"/>
+        <MainUnitHasScaledStatement Value="True"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="uTorrent Remote GUI v0.22.0"/>
+      <UseAppBundle Value="False"/>
+      <CompletionDisableValueCheck Value="False"/>
+      <MainUnit Value="0"/>
+      <Scaled Value="True"/>
+      <ResourceType Value="res"/>
+      <UseXPManifest Value="True"/>
+      <Icon Value="images\app.ico"/>
+      <XPManifest>
+        <DpiAware Value="True"/>
+      </XPManifest>
+    </General>
+    <BuildModes Count="1">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+    </RunParams>
+    <RequiredPackages Count="2">
+      <Item1>
+        <PackageName Value="LCL"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="FCL"/>
+      </Item2>
+    </RequiredPackages>
+    <Units Count="14">
+      <Unit0>
+        <Filename Value="utorrentgui.lpr"/>
+        <IsPartOfProject Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="src\main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="MainForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Main"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="src\connform.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="ConnDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="ConnForm"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="src\rpc.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Rpc"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="src\models.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Models"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="src\utils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Utils"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="src\logger.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Logger"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="src\torrentmeta.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="TorrentMeta"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="src\profiles.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Profiles"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="src\lang.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Lang"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="src\aboutform.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="AboutDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="AboutForm"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="src\appversion.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="AppVersion"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="src\appsettingsform.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="AppSettingsForm"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="src\utsettingsform.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UtSettingsForm"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="src\utsettinglabels.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UtSettingLabels"/>
+      </Unit14>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <PathDelim Value="\"/>
+    <Target>
+      <Filename Value="utorrentgui"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="src"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <CodeGeneration>
+      <SmartLinkUnit Value="True"/>
+      <Optimizations>
+        <OptimizationLevel Value="3"/>
+      </Optimizations>
+    </CodeGeneration>
+    <Linking>
+      <Debugging>
+        <GenerateDebugInfo Value="False"/>
+        <DebugInfoType Value="dsNone"/>
+        <StripSymbols Value="True"/>
+      </Debugging>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
+    </Linking>
+    <Other>
+      <CustomOptions Value="-Xs -XX"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>
+
