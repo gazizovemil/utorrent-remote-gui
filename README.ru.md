@@ -5,7 +5,7 @@
 Настольный **удалённый клиент** для **WebUI uTorrent / BitTorrent** на **Free Pascal / Lazarus**.  
 Вдохновлён [Transmission Remote GUI](https://github.com/transmission-remote-gui/transgui).
 
-**Текущая версия: `0.23.0`**
+**Текущая версия: `0.24.0`**
 
 Основная документация (English): [README.md](README.md)  
 **История изменений:** [CHANGELOG.md](CHANGELOG.md)

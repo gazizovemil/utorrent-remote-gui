@@ -3,18 +3,42 @@ cd /d "%~dp0"
 set "ROOT=%~dp0"
 set "DIST=%ROOT%dist"
 set "STRIP=C:\lazarus\fpc\3.2.2\bin\x86_64-win64\strip.exe"
+set "FPCRES=C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpcres.exe"
+set "WINDRES=C:\lazarus\fpc\3.2.2\bin\x86_64-win64\windres.exe"
+set "CPP=C:\lazarus\fpc\3.2.2\bin\x86_64-win64\cpp.exe"
+
+echo Generating version resource...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%generate-appversion-rc.ps1"
+if errorlevel 1 exit /b 1
+if not exist "%ROOT%lib\x86_64-win64" mkdir "%ROOT%lib\x86_64-win64"
+subst V: /d >nul 2>&1
+subst V: "%ROOT%"
+if errorlevel 1 (
+  echo subst V: failed
+  exit /b 1
+)
+"%WINDRES%" --preprocessor "%CPP%" "V:\appversion.rc" -O res -o "V:\lib\x86_64-win64\winver.res"
+set "WERR=%ERRORLEVEL%"
+if not "%WERR%"=="0" (
+  subst V: /d >nul 2>&1
+  exit /b 1
+)
+"%FPCRES%" -o "V:\lib\x86_64-win64\winver.o" "V:\lib\x86_64-win64\winver.res"
+set "WERR=%ERRORLEVEL%"
+subst V: /d >nul 2>&1
+if not "%WERR%"=="0" exit /b 1
 
 echo Building uTorrent Remote GUI...
 "C:\lazarus\lazbuild.exe" --build-mode=Default "%ROOT%utorrentgui.lpi"
 if errorlevel 1 exit /b 1
 
-REM Strip BEFORE embedding resources — strip --strip-all removes PE icons.
+REM Strip debug only — keep PE version info; icon/manifest re-embedded below.
 if exist "%STRIP%" (
   echo Stripping debug symbols...
-  "%STRIP%" --strip-all "%ROOT%utorrentgui.exe" 2>nul
+  "%STRIP%" --strip-debug "%ROOT%utorrentgui.exe" 2>nul
 )
 
-echo Embedding manifest + icon...
+echo Embedding manifest + icon + version check...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%embed-manifest.ps1"
 if errorlevel 1 exit /b 1
 

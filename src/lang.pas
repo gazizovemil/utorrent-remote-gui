@@ -137,6 +137,10 @@ begin
   L.Values['msg.host.required'] := 'Host is required.';
   L.Values['msg.name.required'] := 'Connection name is required.';
   L.Values['balloon.done.title'] := 'Download finished';
+  L.Values['balloon.error.title'] := 'Torrent error';
+  L.Values['tray.hint.server'] := ' (uTorrent %d @ %s:%d)';
+  L.Values['tray.hint.counts'] := 'Downloading: %d, seeding: %d';
+  L.Values['tray.hint.speeds'] := '%s: %s, %s: %s';
   L.Values['tray.show'] := 'Show window';
   L.Values['dlg.profiles'] := 'Connections';
   L.Values['dlg.profiles.list'] := 'List';
@@ -217,39 +221,44 @@ end;
 procedure LoadStringsFromFile(const FileName: string; Dest: TStringList);
 var
   Ini: TMemIniFile;
-  SL: TStringList;
+  SL, Raw: TStringList;
   I: Integer;
   Sec, Key, Val: string;
 begin
   Dest.Clear;
-  Ini := TMemIniFile.Create(FileName);
+  Raw := TStringList.Create;
   try
-    SL := TStringList.Create;
+    Raw.LoadFromFile(FileName, TEncoding.UTF8);
+    Ini := TMemIniFile.Create('');
     try
-      // Prefer [Strings] section; also accept root keys via empty section dump
-      Ini.ReadSectionValues('Strings', Dest);
-      if Dest.Count = 0 then
-      begin
-        Ini.ReadSections(SL);
-        for I := 0 to SL.Count - 1 do
+      Ini.SetStrings(Raw);
+      SL := TStringList.Create;
+      try
+        Ini.ReadSectionValues('Strings', Dest);
+        if Dest.Count = 0 then
         begin
-          Sec := SL[I];
-          if SameText(Sec, 'Meta') then Continue;
-          Ini.ReadSectionValues(Sec, Dest);
+          Ini.ReadSections(SL);
+          for I := 0 to SL.Count - 1 do
+          begin
+            Sec := SL[I];
+            if SameText(Sec, 'Meta') then Continue;
+            Ini.ReadSectionValues(Sec, Dest);
+          end;
         end;
+        Val := Ini.ReadString('Meta', 'LanguageName', '');
+        if Val = '' then
+          Val := Ini.ReadString('Strings', 'LanguageName', '');
+        if Val = '' then
+          Val := ChangeFileExt(ExtractFileName(FileName), '');
+        Dest.Values['LanguageName'] := Val;
+      finally
+        SL.Free;
       end;
-      // Meta / LanguageName
-      Val := Ini.ReadString('Meta', 'LanguageName', '');
-      if Val = '' then
-        Val := Ini.ReadString('Strings', 'LanguageName', '');
-      if Val = '' then
-        Val := ChangeFileExt(ExtractFileName(FileName), '');
-      Dest.Values['LanguageName'] := Val;
     finally
-      SL.Free;
+      Ini.Free;
     end;
   finally
-    Ini.Free;
+    Raw.Free;
   end;
   // normalize keys to lowercase
   SL := TStringList.Create;

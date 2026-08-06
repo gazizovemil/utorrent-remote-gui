@@ -18,6 +18,7 @@ type
     FedRefresh, FedRefreshMin, FedFont: TSpinEdit;
     FchkDeleteTorrent: TCheckBox;
     FchkMinTray, FchkCloseTray, FchkAlwaysTray, FchkTrayNotify: TCheckBox;
+    FchkRunAtStartup: TCheckBox;
     FchkProxy, FchkProxyAuth: TCheckBox;
     FedProxyHost, FedProxyUser, FedProxyPass: TEdit;
     FedProxyPort: TSpinEdit;
@@ -188,6 +189,7 @@ begin
       (Tmp.CloseToTray <> FSnap.CloseToTray) or
       (Tmp.AlwaysShowTray <> FSnap.AlwaysShowTray) or
       (Tmp.TrayNotify <> FSnap.TrayNotify) or
+      (Tmp.RunAtStartup <> FSnap.RunAtStartup) or
       (Tmp.ProxyEnabled <> FSnap.ProxyEnabled) or
       (Tmp.ProxyHost <> FSnap.ProxyHost) or
       (Tmp.ProxyPort <> FSnap.ProxyPort) or
@@ -310,6 +312,17 @@ begin
   FchkDeleteTorrent.Caption := _('dlg.app.deletetorrent');
   Y := 16;
   AddCheck(G, Y, FchkDeleteTorrent);
+  TopY := FinishGroup(G, Y);
+
+  G := TGroupBox.Create(Scroll);
+  G.Parent := Scroll;
+  G.Caption := _('dlg.app.startup');
+  G.SetBounds(8, TopY, Scroll.ClientWidth - 16, 80);
+  G.Anchors := [akTop, akLeft, akRight];
+  Y := 16;
+  FchkRunAtStartup := TCheckBox.Create(G);
+  FchkRunAtStartup.Caption := _('dlg.app.runatstartup');
+  AddCheck(G, Y, FchkRunAtStartup);
   FinishGroup(G, Y);
 
   { --- Advanced --- }
@@ -423,6 +436,7 @@ begin
   FchkCloseTray.Checked := P.CloseToTray;
   FchkAlwaysTray.Checked := P.AlwaysShowTray;
   FchkTrayNotify.Checked := P.TrayNotify;
+  FchkRunAtStartup.Checked := P.RunAtStartup;
   FchkProxy.Checked := P.ProxyEnabled;
   FedProxyHost.Text := P.ProxyHost;
   FedProxyPort.Value := P.ProxyPort;
@@ -446,6 +460,7 @@ begin
   P.CloseToTray := FchkCloseTray.Checked;
   P.AlwaysShowTray := FchkAlwaysTray.Checked;
   P.TrayNotify := FchkTrayNotify.Checked;
+  P.RunAtStartup := FchkRunAtStartup.Checked;
   P.ProxyEnabled := FchkProxy.Checked;
   P.ProxyHost := Trim(FedProxyHost.Text);
   P.ProxyPort := FedProxyPort.Value;
@@ -477,6 +492,7 @@ begin
     D.FSnap.CloseToTray := P.CloseToTray;
     D.FSnap.AlwaysShowTray := P.AlwaysShowTray;
     D.FSnap.TrayNotify := P.TrayNotify;
+    D.FSnap.RunAtStartup := P.RunAtStartup;
     D.FSnap.ProxyEnabled := P.ProxyEnabled;
     D.FSnap.ProxyHost := P.ProxyHost;
     D.FSnap.ProxyPort := P.ProxyPort;

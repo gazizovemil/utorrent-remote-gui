@@ -19,3 +19,7 @@ release/
 *.7z
 *-setup.exe
 utorrentgui.exe
+appversion.rc
+appversion.res
+winver.o
+winver.res

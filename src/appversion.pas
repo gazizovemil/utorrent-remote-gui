@@ -7,10 +7,10 @@ interface
 { Pre-1.0 versioning: 0.N.0 where N is the iterative build count. }
 const
   AppVerMajor    = 0;
-  AppVerMinor    = 22;
+  AppVerMinor    = 24;
   AppVerPatch    = 0;
-  AppBuildNumber = 22;
-  AppVerStr      = '0.23.0';
+  AppBuildNumber = 24;
+  AppVerStr      = '0.24.0';
   AppName        = 'uTorrent Remote GUI';
   AppHomeURL     = 'https://github.com/gazizovemil/utorrent-remote-gui';
 

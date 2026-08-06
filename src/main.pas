@@ -244,7 +244,9 @@ type
     FCommentURL: string;
     FAllowClose: Boolean;
     FIncompleteHashes: TStringList;
+    FErrorHashes: TStringList;
     FCompletionReady: Boolean;
+    FErrorReady: Boolean;
     FProgressPermille: Integer;
     FNodeAll: TTreeNode;
     FNodeDown: TTreeNode;
@@ -293,10 +295,16 @@ type
     procedure UpdateNormalBounds;
     procedure SaveWindowPlacement;
     procedure RestoreWindowPlacement;
+    procedure UpdateTrayHint(List: TTorrentList);
     procedure NotifyCompleted(const AName: string);
+    procedure NotifyError(const AName, AMsg: string);
     procedure TrackCompletions(List: TTorrentList);
+    procedure TrackErrors(List: TTorrentList);
     function ImagesDir: string;
+    function FilterIconSize: Integer;
+    procedure LoadFilterIcons;
     function AddPngToImageList(IL: TImageList; const FileName: string): Integer;
+    function AddPngToImageListScaled(IL: TImageList; const FileName: string; Size: Integer): Integer;
     function ToolbarIconFile(const BaseName: string): string;
     function ToolbarIconFileForSize(const BaseName: string; Large: Boolean): string;
     procedure UpdateFilterCounts(List: TTorrentList);
@@ -361,6 +369,9 @@ begin
   FIncompleteHashes := TStringList.Create;
   FIncompleteHashes.Sorted := True;
   FIncompleteHashes.Duplicates := dupIgnore;
+  FErrorHashes := TStringList.Create;
+  FErrorHashes.Sorted := True;
+  FErrorHashes.Duplicates := dupIgnore;
   FSelectedHash := '';
   FUpdatingList := False;
   FUpdatingFilter := False;
@@ -369,6 +380,7 @@ begin
   FCommentURL := '';
   FAllowClose := False;
   FCompletionReady := False;
+  FErrorReady := False;
   FProgressPermille := 0;
   FToolbarIconsLoaded := False;
   FLastNonMinimizedState := wsNormal;
@@ -393,6 +405,7 @@ begin
     TrayIcon1.Visible := True
   else
     TrayIcon1.Visible := False;
+  ApplyRunAtStartup(FProfiles.RunAtStartup);
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -400,6 +413,7 @@ begin
   StopRefreshThread;
   FreeAndNil(FLastList);
   FreeAndNil(FIncompleteHashes);
+  FreeAndNil(FErrorHashes);
   FreeAndNil(FProfiles);
   FRpc.Free;
 end;
@@ -795,7 +809,6 @@ var
   I: Integer;
 begin
   Caption := AppTitleWithVersionLocalized(_('app.title'));
-  TrayIcon1.Hint := Caption;
   Application.Title := Caption;
   miTorrent.Caption := _('menu.torrent');
   miView.Caption := _('menu.view');
@@ -1002,6 +1015,7 @@ begin
     StatusBar1.Panels[2].Text := '';
   end;
   LayoutDetails;
+  UpdateTrayHint(FLastList);
 end;
 
 procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -1059,21 +1073,67 @@ begin
 end;
 
 function TMainForm.AddPngToImageList(IL: TImageList; const FileName: string): Integer;
+begin
+  Result := AddPngToImageListScaled(IL, FileName, IL.Width);
+end;
+
+function TMainForm.AddPngToImageListScaled(IL: TImageList; const FileName: string;
+  Size: Integer): Integer;
 var
   PNG: TPortableNetworkGraphic;
+  Bmp: TBitmap;
 begin
   Result := -1;
-  if not FileExists(FileName) then
+  if (Size < 8) or not FileExists(FileName) then
   begin
-    Log('Icon missing: ' + FileName);
+    if not FileExists(FileName) then
+      Log('Icon missing: ' + FileName);
     Exit;
   end;
   PNG := TPortableNetworkGraphic.Create;
+  Bmp := TBitmap.Create;
   try
     PNG.LoadFromFile(FileName);
-    Result := IL.Add(PNG, nil);
+    Bmp.SetSize(Size, Size);
+    Bmp.Canvas.StretchDraw(Rect(0, 0, Size, Size), PNG);
+    Result := IL.Add(Bmp, nil);
   finally
+    Bmp.Free;
     PNG.Free;
+  end;
+end;
+
+function TMainForm.FilterIconSize: Integer;
+begin
+  Result := MulDiv(16, FProfiles.FontSizePercent, 100);
+  if Result < 14 then Result := 14;
+  if Result > 28 then Result := 28;
+end;
+
+procedure TMainForm.LoadFilterIcons;
+var
+  Dir: string;
+  Sz: Integer;
+begin
+  if ImageListFilter = nil then Exit;
+  Dir := IncludeTrailingPathDelimiter(ImagesDir);
+  Sz := FilterIconSize;
+  ImageListFilter.Clear;
+  ImageListFilter.Width := Sz;
+  ImageListFilter.Height := Sz;
+  ImageListFilter.Scaled := False;
+  AddPngToImageListScaled(ImageListFilter, Dir + 'flt_all_16.png', Sz);
+  AddPngToImageListScaled(ImageListFilter, Dir + 'flt_down_16.png', Sz);
+  AddPngToImageListScaled(ImageListFilter, Dir + 'flt_done_16.png', Sz);
+  AddPngToImageListScaled(ImageListFilter, Dir + 'flt_active_16.png', Sz);
+  AddPngToImageListScaled(ImageListFilter, Dir + 'flt_inactive_16.png', Sz);
+  AddPngToImageListScaled(ImageListFilter, Dir + 'flt_stopped_16.png', Sz);
+  AddPngToImageListScaled(ImageListFilter, Dir + 'flt_error_16.png', Sz);
+  AddPngToImageListScaled(ImageListFilter, Dir + 'flt_queue_16.png', Sz);
+  if tvFilter <> nil then
+  begin
+    tvFilter.Images := ImageListFilter;
+    tvFilter.Invalidate;
   end;
 end;
 
@@ -1300,18 +1360,7 @@ var
 begin
   Dir := IncludeTrailingPathDelimiter(ImagesDir);
 
-  ImageListFilter.Clear;
-  ImageListFilter.Width := 16;
-  ImageListFilter.Height := 16;
-  AddPngToImageList(ImageListFilter, Dir + 'flt_all_16.png');
-  AddPngToImageList(ImageListFilter, Dir + 'flt_down_16.png');
-  AddPngToImageList(ImageListFilter, Dir + 'flt_done_16.png');
-  AddPngToImageList(ImageListFilter, Dir + 'flt_active_16.png');
-  AddPngToImageList(ImageListFilter, Dir + 'flt_inactive_16.png');
-  AddPngToImageList(ImageListFilter, Dir + 'flt_stopped_16.png');
-  AddPngToImageList(ImageListFilter, Dir + 'flt_error_16.png');
-  AddPngToImageList(ImageListFilter, Dir + 'flt_queue_16.png');
-  tvFilter.Images := ImageListFilter;
+  LoadFilterIcons;
 
   LoadMenuIcons;
   AssignMenuImages;
@@ -1372,7 +1421,7 @@ begin
   SaveWindowPlacement;
   Hide;
   TrayIcon1.Visible := True;
-  TrayIcon1.Hint := Caption;
+  UpdateTrayHint(FLastList);
   UpdateRefreshInterval;
 end;
 
@@ -1418,6 +1467,60 @@ begin
   Log('Completed notification: ' + AName);
 end;
 
+procedure TMainForm.NotifyError(const AName, AMsg: string);
+begin
+  if not FProfiles.TrayNotify then
+    Exit;
+  TrayIcon1.BalloonTitle := _('balloon.error.title');
+  if AMsg <> '' then
+    TrayIcon1.BalloonHint := AName + ': ' + AMsg
+  else
+    TrayIcon1.BalloonHint := AName;
+  TrayIcon1.BalloonFlags := bfError;
+  TrayIcon1.ShowBalloonHint;
+  Log('Error notification: ' + AName);
+end;
+
+procedure TMainForm.UpdateTrayHint(List: TTorrentList);
+var
+  I, CDown, CSeed: Integer;
+  DL, UL: Int64;
+  P: TConnectionProfile;
+  T: TTorrent;
+  Line1, Line2, Line3: string;
+begin
+  if TrayIcon1 = nil then Exit;
+  Line1 := AppTitleWithVersionLocalized(_('app.title'));
+  if FRpc.Connected and (FProfiles.Count > 0) then
+  begin
+    P := FProfiles[FProfiles.ActiveIndex];
+    Line1 := Line1 + Format(_('tray.hint.server'), [FRpc.Build, P.Host, P.Port]);
+  end
+  else
+    Line1 := Line1 + ' — ' + _('status.noconnect');
+  CDown := 0;
+  CSeed := 0;
+  DL := 0;
+  UL := 0;
+  if List <> nil then
+    for I := 0 to List.Count - 1 do
+    begin
+      T := List[I];
+      Inc(DL, T.DownSpeed);
+      Inc(UL, T.UpSpeed);
+      if (T.Progress < 1000) and ((T.Status and ST_STARTED) <> 0) and
+        ((T.Status and ST_PAUSED) = 0) and ((T.Status and ST_ERROR) = 0) then
+        Inc(CDown);
+      if (T.Progress >= 1000) and ((T.Status and ST_STARTED) <> 0) and
+        ((T.Status and ST_PAUSED) = 0) then
+        Inc(CSeed);
+    end;
+  Line2 := Format(_('tray.hint.counts'), [CDown, CSeed]);
+  Line3 := Format(_('tray.hint.speeds'), [_('status.dl'), FormatSpeed(DL),
+    _('status.ul'), FormatSpeed(UL)]);
+  TrayIcon1.Hint := Line1 + #13#10 + Line2 + #13#10 + Line3;
+end;
+
 procedure TMainForm.TrackCompletions(List: TTorrentList);
 var
   I, Idx: Integer;
@@ -1447,6 +1550,40 @@ begin
         NotifyCompleted(T.Name);
       end;
     end;
+  end;
+end;
+
+procedure TMainForm.TrackErrors(List: TTorrentList);
+var
+  I, Idx: Integer;
+  T: TTorrent;
+  HasErr: Boolean;
+begin
+  if List = nil then Exit;
+  if not FErrorReady then
+  begin
+    FErrorHashes.Clear;
+    for I := 0 to List.Count - 1 do
+      if (List[I].Status and ST_ERROR) <> 0 then
+        FErrorHashes.Add(List[I].Hash);
+    FErrorReady := True;
+    Exit;
+  end;
+  for I := 0 to List.Count - 1 do
+  begin
+    T := List[I];
+    HasErr := (T.Status and ST_ERROR) <> 0;
+    Idx := FErrorHashes.IndexOf(T.Hash);
+    if HasErr then
+    begin
+      if Idx < 0 then
+      begin
+        FErrorHashes.Add(T.Hash);
+        NotifyError(T.Name, T.StatusMessage);
+      end;
+    end
+    else if Idx >= 0 then
+      FErrorHashes.Delete(Idx);
   end;
 end;
 
@@ -1660,6 +1797,7 @@ begin
   if H < 8 then H := 8;
   if H > 24 then H := 24;
   Font.Height := -H;
+  LoadFilterIcons;
 end;
 
 procedure TMainForm.ApplyProxySettings;
@@ -1702,7 +1840,9 @@ begin
     FRpc.Disconnect;
   end;
   FIncompleteHashes.Clear;
+  FErrorHashes.Clear;
   FCompletionReady := False;
+  FErrorReady := False;
   FRpc.Configure(P.Host, P.Port, P.UserName, P.Password, P.UseHTTPS);
   ApplyProxySettings;
   if not FRpc.Connect then
@@ -1967,6 +2107,7 @@ begin
   ApplyViewSettings;
   ApplyFontScale;
   ApplyProxySettings;
+  ApplyRunAtStartup(FProfiles.RunAtStartup);
   UpdateRefreshInterval;
 end;
 
@@ -2090,7 +2231,9 @@ begin
   FRpc.Disconnect;
   FLastList.Clear;
   FIncompleteHashes.Clear;
+  FErrorHashes.Clear;
   FCompletionReady := False;
+  FErrorReady := False;
   lvTorrents.Items.Clear;
   ClearDetails;
   InitFilterTree;
@@ -2099,6 +2242,7 @@ begin
   StatusBar1.Panels[0].Text := _('status.noconnect');
   StatusBar1.Panels[1].Text := '';
   StatusBar1.Panels[2].Text := '';
+  UpdateTrayHint(nil);
 end;
 
 procedure TMainForm.actExitExecute(Sender: TObject);
@@ -2118,6 +2262,7 @@ procedure TMainForm.OnRefresh(Sender: TObject; List: TTorrentList);
 begin
   FLastList.Assign(List);
   TrackCompletions(FLastList);
+  TrackErrors(FLastList);
   UpdateFilterCounts(FLastList);
   ApplyList(FLastList);
 end;
@@ -2143,13 +2288,14 @@ begin
       Inc(UL, List[I].UpSpeed);
     end;
   StatusBar1.Panels[1].Text := Format('%s: %s', [_('status.dl'), FormatSpeed(DL)]);
-  StatusBar1.Panels[2].Text := Format('%s: %s', [_('status.ul'), FormatSpeed(UL)]);
+    StatusBar1.Panels[2].Text := Format('%s: %s', [_('status.ul'), FormatSpeed(UL)]);
   if FRpc.Connected and (FProfiles.Count > 0) then
   begin
     P := FProfiles[FProfiles.ActiveIndex];
     StatusBar1.Panels[0].Text := Format('uTorrent build %d @ %s:%d',
       [FRpc.Build, P.Host, P.Port]);
   end;
+  UpdateTrayHint(List);
 end;
 
 procedure TMainForm.ApplyList(List: TTorrentList);

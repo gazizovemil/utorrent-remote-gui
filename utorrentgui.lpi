@@ -10,7 +10,7 @@
         <MainUnitHasScaledStatement Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <Title Value="uTorrent Remote GUI v0.23.0"/>
+      <Title Value="uTorrent Remote GUI v0.24.0"/>
       <UseAppBundle Value="False"/>
       <CompletionDisableValueCheck Value="False"/>
       <MainUnit Value="0"/>

@@ -22,12 +22,14 @@ function OpenLocalPath(const APath: string): Boolean;
 function EncodeURLComponent(const S: string): string;
 function ConfigFilePath: string;
 function GetLikeColor(Color: TColor; Delta: Integer): TColor;
+function RunAtStartupEnabled: Boolean;
+procedure ApplyRunAtStartup(Enabled: Boolean);
 
 implementation
 
 {$IFDEF WINDOWS}
 uses
-  Windows, ShellAPI;
+  Windows, ShellAPI, Registry;
 {$ELSE}
 uses
   Process, LCLIntf;
@@ -247,5 +249,56 @@ begin
     I := -Delta;
   Result := AddToColor(Result, I, I, I);
 end;
+
+{$IFDEF WINDOWS}
+const
+  cRunKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
+  cRunValueName = 'uTorrent Remote GUI';
+
+function RunAtStartupEnabled: Boolean;
+var
+  Reg: TRegistry;
+begin
+  Result := False;
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKey(cRunKey, False) then
+      Result := Reg.ValueExists(cRunValueName);
+  finally
+    Reg.Free;
+  end;
+end;
+
+procedure ApplyRunAtStartup(Enabled: Boolean);
+var
+  Reg: TRegistry;
+  Cmd: string;
+begin
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Enabled then
+    begin
+      Cmd := '"' + ParamStr(0) + '"';
+      if Reg.OpenKey(cRunKey, True) then
+        Reg.WriteString(cRunValueName, Cmd);
+    end
+    else if Reg.OpenKey(cRunKey, False) then
+      Reg.DeleteValue(cRunValueName);
+  finally
+    Reg.Free;
+  end;
+end;
+{$ELSE}
+function RunAtStartupEnabled: Boolean;
+begin
+  Result := False;
+end;
+
+procedure ApplyRunAtStartup(Enabled: Boolean);
+begin
+end;
+{$ENDIF}
 
 end.

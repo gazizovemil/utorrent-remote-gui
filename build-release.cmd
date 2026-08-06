@@ -4,7 +4,6 @@ cd /d "%~dp0"
 set "ROOT=%~dp0"
 set "DIST=%ROOT%dist"
 set "REL=%ROOT%release"
-set "ISCC=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 set "SEVENZ=C:\Program Files\7-Zip\7z.exe"
 
 for /f "delims=" %%V in ('type "%ROOT%VERSION"') do set "VER=%%V"
@@ -39,21 +38,8 @@ popd
 if not "%ZERR%"=="0" exit /b 1
 
 echo === Build installer (Inno Setup) ===
-if not exist "%ISCC%" (
-  echo Inno Setup not found: %ISCC%
-  exit /b 1
-)
-REM Inno Setup: '#' in project path breaks the preprocessor — use drive alias.
-subst T: /d >nul 2>&1
-subst T: "%ROOT%"
-if errorlevel 1 (
-  echo subst T: failed — drive letter may be in use
-  exit /b 1
-)
-"%ISCC%" "T:\utorrentgui.iss"
-set "IERR=%ERRORLEVEL%"
-subst T: /d >nul 2>&1
-if not "%IERR%"=="0" exit /b 1
+call "%ROOT%build-installer.cmd"
+if errorlevel 1 exit /b 1
 
 echo.
 echo Release artifacts in %REL%:

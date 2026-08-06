@@ -7,6 +7,15 @@ Canonical version: [`src/appversion.pas`](src/appversion.pas) (`AppVerStr`).
 
 ---
 
+## [0.24.0] — 2026-08-06
+
+### Added
+- **Tray tooltip:** multi-line hint on hover (connection, download/seed counts, speeds) like TransGUI.
+- **Run at Windows startup** option in application settings (registry autoload).
+- **Torrent error notifications** via tray balloon when a torrent enters error state.
+
+---
+
 ## [0.23.0] — 2026-08-06
 
 ### Fixed

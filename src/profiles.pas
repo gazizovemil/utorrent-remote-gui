@@ -50,6 +50,7 @@ type
     FWindowWidth: Integer;
     FWindowHeight: Integer;
     FWindowMaximized: Boolean;
+    FRunAtStartup: Boolean;
     function GetCount: Integer;
     function GetItem(Index: Integer): TConnectionProfile;
     procedure SetItem(Index: Integer; const AValue: TConnectionProfile);
@@ -91,6 +92,7 @@ type
     property WindowWidth: Integer read FWindowWidth write FWindowWidth;
     property WindowHeight: Integer read FWindowHeight write FWindowHeight;
     property WindowMaximized: Boolean read FWindowMaximized write FWindowMaximized;
+    property RunAtStartup: Boolean read FRunAtStartup write FRunAtStartup;
   end;
 
 function DefaultProfile: TConnectionProfile;
@@ -173,6 +175,7 @@ begin
   FWindowWidth := 0;
   FWindowHeight := 0;
   FWindowMaximized := False;
+  FRunAtStartup := False;
   SetLength(FItems, 0);
 end;
 
@@ -264,6 +267,7 @@ begin
     FWindowWidth := Ini.ReadInteger('Window', 'Width', 0);
     FWindowHeight := Ini.ReadInteger('Window', 'Height', 0);
     FWindowMaximized := Ini.ReadBool('Window', 'Maximized', False);
+    FRunAtStartup := Ini.ReadBool('General', 'RunAtStartup', False);
     if FRefreshInterval < 1 then FRefreshInterval := 2;
     if FRefreshMinimized < 1 then FRefreshMinimized := 20;
     if FFontSizePercent < 50 then FFontSizePercent := 50;
@@ -338,6 +342,7 @@ begin
     Ini.WriteInteger('Window', 'Width', FWindowWidth);
     Ini.WriteInteger('Window', 'Height', FWindowHeight);
     Ini.WriteBool('Window', 'Maximized', FWindowMaximized);
+    Ini.WriteBool('General', 'RunAtStartup', FRunAtStartup);
     Ini.WriteBool('Proxy', 'Enabled', FProxyEnabled);
     Ini.WriteString('Proxy', 'Host', FProxyHost);
     Ini.WriteInteger('Proxy', 'Port', FProxyPort);
