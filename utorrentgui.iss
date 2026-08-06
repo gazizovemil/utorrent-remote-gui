@@ -2,7 +2,7 @@
 ; Compile: "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" utorrentgui.iss
 
 #define MyAppName "uTorrent Remote GUI"
-#define MyAppVersion "0.22.0"
+#define MyAppVersion "0.23.0"
 #define MyAppPublisher "gazizovemil"
 #define MyAppURL "https://github.com/gazizovemil/utorrent-remote-gui"
 #define MyAppExeName "utorrentgui.exe"

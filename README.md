@@ -7,7 +7,7 @@
 Desktop **remote GUI** for **uTorrent / BitTorrent WebUI**, written in **Free Pascal / Lazarus**.  
 Inspired by [Transmission Remote GUI (transgui)](https://github.com/transmission-remote-gui/transgui).
 
-**Current version: `0.22.0`**
+**Current version: `0.23.0`**
 
 Also available in Russian: [README.ru.md](README.ru.md)
 

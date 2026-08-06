@@ -45,6 +45,11 @@ type
     FProxyPass: string;
     FProxySocks5: Boolean;
     FDeleteTorrentAfterAdd: Boolean;
+    FWindowLeft: Integer;
+    FWindowTop: Integer;
+    FWindowWidth: Integer;
+    FWindowHeight: Integer;
+    FWindowMaximized: Boolean;
     function GetCount: Integer;
     function GetItem(Index: Integer): TConnectionProfile;
     procedure SetItem(Index: Integer; const AValue: TConnectionProfile);
@@ -81,6 +86,11 @@ type
     property ProxyPass: string read FProxyPass write FProxyPass;
     property ProxySocks5: Boolean read FProxySocks5 write FProxySocks5;
     property DeleteTorrentAfterAdd: Boolean read FDeleteTorrentAfterAdd write FDeleteTorrentAfterAdd;
+    property WindowLeft: Integer read FWindowLeft write FWindowLeft;
+    property WindowTop: Integer read FWindowTop write FWindowTop;
+    property WindowWidth: Integer read FWindowWidth write FWindowWidth;
+    property WindowHeight: Integer read FWindowHeight write FWindowHeight;
+    property WindowMaximized: Boolean read FWindowMaximized write FWindowMaximized;
   end;
 
 function DefaultProfile: TConnectionProfile;
@@ -158,6 +168,11 @@ begin
   FProxyPass := '';
   FProxySocks5 := False;
   FDeleteTorrentAfterAdd := False;
+  FWindowLeft := 0;
+  FWindowTop := 0;
+  FWindowWidth := 0;
+  FWindowHeight := 0;
+  FWindowMaximized := False;
   SetLength(FItems, 0);
 end;
 
@@ -244,6 +259,11 @@ begin
     FProxyPass := Ini.ReadString('Proxy', 'Password', '');
     FProxySocks5 := Ini.ReadBool('Proxy', 'Socks5', False);
     FDeleteTorrentAfterAdd := Ini.ReadBool('General', 'DeleteTorrentAfterAdd', False);
+    FWindowLeft := Ini.ReadInteger('Window', 'Left', 0);
+    FWindowTop := Ini.ReadInteger('Window', 'Top', 0);
+    FWindowWidth := Ini.ReadInteger('Window', 'Width', 0);
+    FWindowHeight := Ini.ReadInteger('Window', 'Height', 0);
+    FWindowMaximized := Ini.ReadBool('Window', 'Maximized', False);
     if FRefreshInterval < 1 then FRefreshInterval := 2;
     if FRefreshMinimized < 1 then FRefreshMinimized := 20;
     if FFontSizePercent < 50 then FFontSizePercent := 50;
@@ -313,6 +333,11 @@ begin
     Ini.WriteInteger('General', 'FontSizePercent', FFontSizePercent);
     Ini.WriteString('General', 'PathMap', StringReplace(FPathMap, LineEnding, '\n', [rfReplaceAll]));
     Ini.WriteBool('General', 'DeleteTorrentAfterAdd', FDeleteTorrentAfterAdd);
+    Ini.WriteInteger('Window', 'Left', FWindowLeft);
+    Ini.WriteInteger('Window', 'Top', FWindowTop);
+    Ini.WriteInteger('Window', 'Width', FWindowWidth);
+    Ini.WriteInteger('Window', 'Height', FWindowHeight);
+    Ini.WriteBool('Window', 'Maximized', FWindowMaximized);
     Ini.WriteBool('Proxy', 'Enabled', FProxyEnabled);
     Ini.WriteString('Proxy', 'Host', FProxyHost);
     Ini.WriteInteger('Proxy', 'Port', FProxyPort);

@@ -265,6 +265,10 @@ type
     FActColumns: TAction;
     FToolbarLarge: Boolean;
     FToolbarIconsLoaded: Boolean;
+    FLastNonMinimizedState: TWindowState;
+    FRestoreWindowState: TWindowState;
+    FNormalBounds: TRect;
+    FWindowPlacementRestored: Boolean;
     procedure InitFilterTree;
     procedure LoadIcons;
     procedure EnsureToolbarIconsLoaded;
@@ -286,6 +290,9 @@ type
     function ConnectActiveProfile: Boolean;
     procedure ShowFromTray;
     procedure HideToTray;
+    procedure UpdateNormalBounds;
+    procedure SaveWindowPlacement;
+    procedure RestoreWindowPlacement;
     procedure NotifyCompleted(const AName: string);
     procedure TrackCompletions(List: TTorrentList);
     function ImagesDir: string;
@@ -364,6 +371,10 @@ begin
   FCompletionReady := False;
   FProgressPermille := 0;
   FToolbarIconsLoaded := False;
+  FLastNonMinimizedState := wsNormal;
+  FRestoreWindowState := wsNormal;
+  FNormalBounds := BoundsRect;
+  FWindowPlacementRestored := False;
   ApplyGlassStyle;
   FToolbarLarge := FProfiles.ToolbarLarge;
   LoadIcons;
@@ -395,14 +406,81 @@ end;
 
 procedure TMainForm.FormShow(Sender: TObject);
 begin
+  if not FWindowPlacementRestored then
+  begin
+    RestoreWindowPlacement;
+    FWindowPlacementRestored := True;
+  end;
   ApplyToolbarSize;
   LayoutDetails;
   if FProfiles.AutoConnect and (FProfiles.Count > 0) and not FRpc.Connected then
     ConnectActiveProfile;
 end;
 
+procedure TMainForm.UpdateNormalBounds;
+begin
+  if WindowState = wsNormal then
+    FNormalBounds := BoundsRect;
+end;
+
+procedure TMainForm.SaveWindowPlacement;
+var
+  R: TRect;
+begin
+  if FLastNonMinimizedState = wsMaximized then
+    R := FNormalBounds
+  else
+    R := BoundsRect;
+  if (R.Right <= R.Left) or (R.Bottom <= R.Top) then
+    Exit;
+  FProfiles.WindowMaximized := FLastNonMinimizedState = wsMaximized;
+  FProfiles.WindowLeft := R.Left;
+  FProfiles.WindowTop := R.Top;
+  FProfiles.WindowWidth := R.Right - R.Left;
+  FProfiles.WindowHeight := R.Bottom - R.Top;
+  FProfiles.Save;
+end;
+
+procedure TMainForm.RestoreWindowPlacement;
+var
+  R: TRect;
+  W, H: Integer;
+begin
+  W := FProfiles.WindowWidth;
+  H := FProfiles.WindowHeight;
+  if (W <= 0) or (H <= 0) then
+    Exit;
+  R := Rect(FProfiles.WindowLeft, FProfiles.WindowTop,
+    FProfiles.WindowLeft + W, FProfiles.WindowTop + H);
+  if R.Right > Screen.DesktopWidth then
+    R.Left := Screen.DesktopWidth - W;
+  if R.Bottom > Screen.DesktopHeight then
+    R.Top := Screen.DesktopHeight - H;
+  if R.Left < 0 then
+    R.Left := 0;
+  if R.Top < 0 then
+    R.Top := 0;
+  R.Right := R.Left + W;
+  R.Bottom := R.Top + H;
+  FNormalBounds := R;
+  WindowState := wsNormal;
+  BoundsRect := R;
+  if FProfiles.WindowMaximized then
+  begin
+    WindowState := wsMaximized;
+    FLastNonMinimizedState := wsMaximized;
+    FRestoreWindowState := wsMaximized;
+  end
+  else
+  begin
+    FLastNonMinimizedState := wsNormal;
+    FRestoreWindowState := wsNormal;
+  end;
+end;
+
 procedure TMainForm.FormResize(Sender: TObject);
 begin
+  UpdateNormalBounds;
   LayoutDetails;
 end;
 
@@ -937,6 +1015,7 @@ end;
 
 procedure TMainForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
+  SaveWindowPlacement;
   StopRefreshThread;
   FRpc.Disconnect;
   TrayIcon1.Visible := False;
@@ -945,9 +1024,15 @@ end;
 
 procedure TMainForm.FormWindowStateChange(Sender: TObject);
 begin
+  if WindowState <> wsMinimized then
+  begin
+    FLastNonMinimizedState := WindowState;
+    if WindowState = wsNormal then
+      FNormalBounds := BoundsRect;
+  end;
   if (WindowState = wsMinimized) and FProfiles.MinimizeToTray then
   begin
-    WindowState := wsNormal;
+    FRestoreWindowState := FLastNonMinimizedState;
     HideToTray;
   end;
 end;
@@ -1282,6 +1367,9 @@ end;
 
 procedure TMainForm.HideToTray;
 begin
+  if WindowState <> wsMinimized then
+    FRestoreWindowState := WindowState;
+  SaveWindowPlacement;
   Hide;
   TrayIcon1.Visible := True;
   TrayIcon1.Hint := Caption;
@@ -1289,9 +1377,14 @@ begin
 end;
 
 procedure TMainForm.ShowFromTray;
+var
+  Restore: TWindowState;
 begin
+  Restore := FRestoreWindowState;
+  if Restore = wsMinimized then
+    Restore := wsNormal;
   Show;
-  WindowState := wsNormal;
+  WindowState := Restore;
   BringToFront;
   Application.BringToFront;
   if not FProfiles.AlwaysShowTray then

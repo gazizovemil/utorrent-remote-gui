@@ -10,7 +10,7 @@ const
   AppVerMinor    = 22;
   AppVerPatch    = 0;
   AppBuildNumber = 22;
-  AppVerStr      = '0.22.0';
+  AppVerStr      = '0.23.0';
   AppName        = 'uTorrent Remote GUI';
   AppHomeURL     = 'https://github.com/gazizovemil/utorrent-remote-gui';
 
