@@ -1,4 +1,4 @@
-uTorrent Remote GUI v0.22.0
+uTorrent Remote GUI v0.24.0
 =========================
 
 Run: utorrentgui.exe
